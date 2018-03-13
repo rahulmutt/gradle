@@ -125,7 +125,9 @@ public interface FileCollection extends Iterable<File>, AntBuilderAware, Buildab
      * @param collection The collection to add.
      * @return This
      * @throws UnsupportedOperationException When this collection does not allow modification.
+     * @deprecated use {@link ConfigurableFileCollection#from(Object...)}
      */
+    @Deprecated
     FileCollection add(FileCollection collection) throws UnsupportedOperationException;
 
     /**

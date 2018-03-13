@@ -49,9 +49,11 @@ public class DefaultProjectLayout implements ProjectLayout, TaskFileVarFactory {
     private final FixedDirectory projectDir;
     private final DefaultDirectoryVar buildDir;
     private final TaskResolver taskResolver;
+    private final FileResolver fileResolver;
 
     public DefaultProjectLayout(File projectDir, FileResolver resolver, TaskResolver taskResolver) {
         this.taskResolver = taskResolver;
+        this.fileResolver = resolver;
         this.projectDir = new FixedDirectory(projectDir, resolver);
         this.buildDir = new DefaultDirectoryVar(resolver, Project.DEFAULT_BUILD_DIR_NAME);
     }
@@ -154,6 +156,11 @@ public class DefaultProjectLayout implements ProjectLayout, TaskFileVarFactory {
                 return new FixedFile(projectDir.fileResolver.resolve(file));
             }
         };
+    }
+
+    @Override
+    public FileCollection filesFor(Object... files) {
+        return new ImmutableFileCollection(fileResolver, taskResolver, files);
     }
 
     /**

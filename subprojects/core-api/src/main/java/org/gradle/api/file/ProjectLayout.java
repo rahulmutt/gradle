@@ -90,4 +90,11 @@ public interface ProjectLayout {
      * Creates a {@link RegularFile} provider whose location is calculated from the given {@link Provider}.
      */
     Provider<RegularFile> file(Provider<File> file);
+
+    /**
+     * Creates a {@link FileCollection} for the given targets
+     * @param  files Any type of object accepted by {@link org.gradle.api.Project#files(Object...)}
+     * @since 4.7
+     */
+    FileCollection filesFor(Object... files);
 }
