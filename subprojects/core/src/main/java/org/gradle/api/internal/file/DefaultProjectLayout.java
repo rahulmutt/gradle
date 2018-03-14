@@ -29,6 +29,7 @@ import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.file.RegularFileVar;
+import org.gradle.api.internal.file.collections.DefaultConfigurableFileCollection;
 import org.gradle.api.internal.file.collections.MinimalFileSet;
 import org.gradle.api.internal.provider.AbstractCombiningProvider;
 import org.gradle.api.internal.provider.AbstractMappingProvider;
@@ -161,6 +162,11 @@ public class DefaultProjectLayout implements ProjectLayout, TaskFileVarFactory {
     @Override
     public FileCollection filesFor(Object... files) {
         return new ImmutableFileCollection(fileResolver, taskResolver, files);
+    }
+
+    @Override
+    public ConfigurableFileCollection mutableFilesFor(Object... files) {
+        return new DefaultConfigurableFileCollection(fileResolver, taskResolver, files);
     }
 
     /**

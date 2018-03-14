@@ -17,6 +17,7 @@
 package org.gradle.api.internal.file;
 
 import com.google.common.collect.ImmutableSet;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.file.collections.FileCollectionResolveContext;
 import org.gradle.api.internal.tasks.DefaultTaskDependency;
 import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
@@ -63,5 +64,10 @@ public class ImmutableFileCollection extends CompositeFileCollection {
     public void visitDependencies(TaskDependencyResolveContext context) {
         context.add(buildDependency);
         super.visitDependencies(context);
+    }
+
+    @Override
+    public FileCollection add(FileCollection collection) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException(String.format("%s does not allow modification.", getCapDisplayName()));
     }
 }

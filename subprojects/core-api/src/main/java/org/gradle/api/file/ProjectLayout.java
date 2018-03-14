@@ -97,4 +97,11 @@ public interface ProjectLayout {
      * @since 4.7
      */
     FileCollection filesFor(Object... files);
+
+    /**
+     * Creates a {@link ConfigurableFileCollection} for the given targets
+     * @param  files Any type of object accepted by {@link org.gradle.api.Project#files(Object...)}
+     * @since 4.7
+     */
+    ConfigurableFileCollection mutableFilesFor(Object... files);
 }
