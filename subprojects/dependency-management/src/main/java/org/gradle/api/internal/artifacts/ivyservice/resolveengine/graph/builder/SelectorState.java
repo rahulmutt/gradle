@@ -25,8 +25,10 @@ import org.gradle.api.internal.artifacts.ResolvedVersionConstraint;
 import org.gradle.api.internal.artifacts.dependencies.DefaultResolvedVersionConstraint;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme;
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphSelector;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.selectors.ResolvableSelectorState;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionDescriptorInternal;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionReasonInternal;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.VersionSelectionReasons;
@@ -44,7 +46,7 @@ import static org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.
 /**
  * Resolution state for a given module version selector.
  */
-class SelectorState implements DependencyGraphSelector {
+public class SelectorState implements DependencyGraphSelector, ResolvableSelectorState {
     // TODO:DAZ Should inject this
     private static final VersionSelectorScheme VERSION_SELECTOR_SCHEME = new DefaultVersionSelectorScheme(new DefaultVersionComparator());
     private final Long id;
@@ -112,9 +114,14 @@ class SelectorState implements DependencyGraphSelector {
     /**
      * Does the work of actually resolving a component selector to a component identifier.
      */
-    public ComponentIdResolveResult resolve() {
+    public ComponentIdResolveResult resolve(VersionSelector allRejects) {
         if (idResolveResult != null) {
-            return idResolveResult;
+            if (idResolveResult.getFailure() != null) {
+                return idResolveResult;
+            }
+            if (!allRejects.accept(idResolveResult.getModuleVersionId().getVersion())) {
+                return idResolveResult;
+            }
         }
 
         BuildableComponentIdResolveResult idResolveResult = new DefaultBuildableComponentIdResolveResult();
@@ -124,7 +131,11 @@ class SelectorState implements DependencyGraphSelector {
             if (dependencyMetadata.isPending()) {
                 idResolveResult.setSelectionDescription(CONSTRAINT);
             }
-            resolver.resolve(dependencyMetadata, versionConstraint, idResolveResult);
+            ResolvedVersionConstraint resolveConstraint = null;
+            if (versionConstraint != null) {
+                resolveConstraint = new DefaultResolvedVersionConstraint(versionConstraint.getPreferredSelector(), allRejects);
+            }
+            resolver.resolve(dependencyMetadata, resolveConstraint, idResolveResult);
         }
 
         if (idResolveResult.getFailure() != null) {
@@ -137,7 +148,7 @@ class SelectorState implements DependencyGraphSelector {
 
     }
 
-    public void select(ComponentState selected) {
+    public void select(ComponentState selected, ComponentIdResolveResult idResolveResult) {
         selected.selectedBy(this);
         selected.addCause(idResolveResult.getSelectionDescription());
         if (dependencyState.getRuleDescriptor() != null) {

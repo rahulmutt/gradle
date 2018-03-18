@@ -38,6 +38,7 @@ import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.conflict
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.conflicts.DefaultCapabilitiesConflictHandler;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.conflicts.ModuleConflictHandler;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.conflicts.PotentialConflict;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.selectors.SelectorStateResolver;
 import org.gradle.api.internal.attributes.AttributesSchemaInternal;
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.specs.Spec;
@@ -218,7 +219,10 @@ public class DependencyGraphBuilder {
             return;
         }
 
-        ComponentIdResolveResult idResolveResult = selector.resolve();
+        ModuleResolveState module = selector.getTargetModule();
+        List<SelectorState> selectors = module.getSelectors();
+        SelectorStateResolver.ResolveResults resolve = SelectorStateResolver.resolve(selectors);
+        ComponentIdResolveResult idResolveResult = resolve.results.get(selector);
         if (idResolveResult.getFailure() != null) {
             // Resolve failure, nothing more to do.
             return;
@@ -226,9 +230,8 @@ public class DependencyGraphBuilder {
 
         ComponentState moduleRevision = resolveState.getRevision(idResolveResult.getId(), idResolveResult.getModuleVersionId(), idResolveResult.getMetadata());
         dependency.start(moduleRevision);
-        selector.select(moduleRevision);
+        selector.select(moduleRevision, idResolveResult);
 
-        ModuleResolveState module = selector.getTargetModule();
         if (tryCompatibleSelection(resolveState, moduleRevision, module)) {
             return;
         }

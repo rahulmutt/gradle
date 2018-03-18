@@ -32,8 +32,11 @@ import org.gradle.internal.component.external.model.ModuleComponentResolveMetada
 import org.gradle.internal.component.external.model.ModuleDependencyMetadata;
 import org.gradle.internal.component.external.model.ModuleDependencyMetadataWrapper;
 import org.gradle.internal.component.model.DependencyMetadata;
+import org.gradle.internal.resolve.ModuleVersionNotFoundException;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
+
+import java.util.Collections;
 
 public class RepositoryChainDependencyToComponentIdResolver implements DependencyToComponentIdResolver {
     private final DynamicVersionResolver dynamicRevisionResolver;
@@ -64,12 +67,16 @@ public class RepositoryChainDependencyToComponentIdResolver implements Dependenc
                 dynamicRevisionResolver.resolve(toModuleDependencyMetadata(dependency), preferredSelector, resolvedVersionConstraint.getRejectedSelector(), result);
             } else {
                 String version = resolvedVersionConstraint.getPreferredVersion();
-                ModuleComponentIdentifier id = new DefaultModuleComponentIdentifier(module.getGroup(), module.getModule(), version);
-                ModuleVersionIdentifier mvId = moduleIdentifierFactory.moduleWithVersion(module.getGroup(), module.getModule(), version);
-                result.resolved(id, mvId);
-                String reason = dependency.getReason();
-                if (reason != null) {
-                    result.setSelectionDescription(result.getSelectionDescription().withReason(reason));
+                if (resolvedVersionConstraint.getRejectedSelector() != null && resolvedVersionConstraint.getRejectedSelector().accept(version)) {
+                    result.failed(new ModuleVersionNotFoundException(module, result.getAttempted(), Collections.<String>emptyList(), Collections.singletonList(version)));
+                } else {
+                    ModuleComponentIdentifier id = new DefaultModuleComponentIdentifier(module.getGroup(), module.getModule(), version);
+                    ModuleVersionIdentifier mvId = moduleIdentifierFactory.moduleWithVersion(module.getGroup(), module.getModule(), version);
+                    result.resolved(id, mvId);
+                    String reason = dependency.getReason();
+                    if (reason != null) {
+                        result.setSelectionDescription(result.getSelectionDescription().withReason(reason));
+                    }
                 }
             }
         }

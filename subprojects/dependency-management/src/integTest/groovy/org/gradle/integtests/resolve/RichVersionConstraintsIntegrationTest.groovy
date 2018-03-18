@@ -422,7 +422,7 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
             dependencies {
                 conf('org:foo') {
                     version {
-                        strictly '[1.0,1.2]'
+                        strictly '[1.1,1.3]'
                     }
                 }
                 conf project(path:'other', configuration: 'conf')
@@ -436,9 +436,9 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
                 conf
             }
             dependencies {
-                conf('org:foo:[1.1,1.3]') {
+                conf('org:foo:[1.0,1.2]') {
                     version {
-                        strictly '[1.1,1.3]'
+                        strictly '[1.0,1.2]'
                     }
                 }
             }       
@@ -463,11 +463,11 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
         then:
         resolve.expectGraph {
             root(":", ":test:") {
-                edge("org:foo:[1.0,1.2]", "org:foo:1.2")
+                edge("org:foo:[1.1,1.3]", "org:foo:1.2")
                 project(':other', 'test:other:') {
                     configuration = 'conf'
                     noArtifacts()
-                    edge("org:foo:[1.1,1.3]", "org:foo:1.2")
+                    edge("org:foo:[1.0,1.2]", "org:foo:1.2")
                 }
             }
         }

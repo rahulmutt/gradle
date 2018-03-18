@@ -18,6 +18,7 @@ package org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.selecto
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.gradle.api.internal.artifacts.ResolvedVersionConstraint;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.UnionVersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector;
 import org.gradle.internal.resolve.result.ComponentIdResolveResult;
@@ -34,15 +35,15 @@ public class SelectorStateResolver {
      * If a single version can satify all of the selectors, the result will reflect this.
      * If not, a minimal set of versions will be provided in the result, and conflict resolution will be required to choose.
      */
-    public static ResolveResults resolve(List<ResolvableSelectorState> dependencies) {
+    public static ResolveResults resolve(List<? extends ResolvableSelectorState> dependencies) {
         // Resolve the whole shebang
         VersionSelector allRejects = allRejects(dependencies);
         ResolveResults results = new ResolveResults();
         for (ResolvableSelectorState dep : dependencies) {
-            // For a 'reject-only' selector, don't need to resolve
-            if (isRejectOnly(dep)) {
-                continue;
-            }
+            // For a 'reject-only' selector, don't need to resolve (but production code can't yet handle this)
+//            if (isRejectOnly(dep)) {
+//                continue;
+//            }
 
             // Check already resolved results for a compatible version, and use it for this dependency rather than re-resolving.
             if (results.alreadyHaveResolution(dep)) {
@@ -57,14 +58,25 @@ public class SelectorStateResolver {
         return results;
     }
 
+    // TODO:DAZ Avoid the null-check on `dep.versionConstraint`
+    // TODO:DAZ Implement this properly so we can avoid resolve for empty preferred versions.
     private static boolean isRejectOnly(ResolvableSelectorState dep) {
-        return dep.getVersionConstraint().getPreferredVersion().isEmpty();
+        return dep.getVersionConstraint() != null
+            && dep.getVersionConstraint().getPreferredVersion().isEmpty()
+            && dep.getVersionConstraint().getRejectedSelector() != null;
     }
 
-    private static VersionSelector allRejects(List<ResolvableSelectorState> dependencies) {
+    private static VersionSelector allRejects(List<? extends ResolvableSelectorState> dependencies) {
         List<VersionSelector> rejectSelectors = Lists.newArrayListWithCapacity(dependencies.size());
         for (ResolvableSelectorState dependency : dependencies) {
-            rejectSelectors.add(dependency.getVersionConstraint().getRejectedSelector());
+            // TODO:DAZ Avoid the multiple null-checks here
+            ResolvedVersionConstraint versionConstraint = dependency.getVersionConstraint();
+            if (versionConstraint != null) {
+                VersionSelector rejectSelector = versionConstraint.getRejectedSelector();
+                if (rejectSelector != null) {
+                    rejectSelectors.add(rejectSelector);
+                }
+            }
         }
         return new UnionVersionSelector(rejectSelectors);
     }
@@ -105,7 +117,8 @@ public class SelectorStateResolver {
             if (candidate.getFailure() != null) {
                 return false;
             }
-            return dep.getVersionConstraint().getPreferredSelector().accept(candidate.getModuleVersionId().getVersion());
+            VersionSelector prefer = dep.getVersionConstraint().getPreferredSelector();
+            return !prefer.requiresMetadata() && prefer.accept(candidate.getModuleVersionId().getVersion());
         }
     }
 }

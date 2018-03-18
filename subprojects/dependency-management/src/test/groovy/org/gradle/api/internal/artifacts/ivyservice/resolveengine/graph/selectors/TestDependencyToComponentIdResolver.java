@@ -40,6 +40,12 @@ public class TestDependencyToComponentIdResolver implements DependencyToComponen
         VersionSelector prefer = versionConstraint.getPreferredSelector();
         VersionSelector allRejects = versionConstraint.getRejectedSelector();
 
+        if (prefer.getSelector().isEmpty()) {
+            DefaultModuleComponentIdentifier id = new DefaultModuleComponentIdentifier("org", "module", "-1");
+            result.resolved(id, DefaultModuleVersionIdentifier.newId(id));
+            return;
+        }
+
         // Short-circuit resolution when everything in the preferred range is rejected.
         if (VersionSelectors.isSubset(prefer, allRejects)) {
             result.failed(missing(versionConstraint));

@@ -74,7 +74,6 @@ public class TestSelectorState implements ResolvableSelectorState {
     private ComponentIdResolveResult resolveVersion(final VersionSelector allRejects) {
 
         VersionSelector prefer = versionConstraint.getPreferredSelector();
-        assert !prefer.getSelector().isEmpty();
 
         BuildableComponentIdResolveResult result = new DefaultBuildableComponentIdResolveResult();
 
