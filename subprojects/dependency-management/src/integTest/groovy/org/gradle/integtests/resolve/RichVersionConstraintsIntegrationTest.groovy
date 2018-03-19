@@ -218,13 +218,17 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
         when:
         repositoryInteractions {
             'org:foo' {
-                expectVersionListing()
+                if (listVersions) {
+                    expectVersionListing()
+                }
                 '1.2' {
                     expectGetMetadata()
                     expectGetArtifact()
                 }
-                '1.3' {
-                    expectGetMetadata()
+                if (resolve13) {
+                    '1.3' {
+                        expectGetMetadata()
+                    }
                 }
             }
             'org:bar:1.0' {
@@ -247,8 +251,11 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
         }
 
         where:
-        directDependencyVersion << ['[1.0,1.3]', '1.2', '[1.0, 1.2]', '[1.0, 1.3]']
-        transitiveDependencyVersion << ['1.2', '[1.0,1.3]', '[1.0, 1.3]', '[1.0, 1.2]']
+        directDependencyVersion | transitiveDependencyVersion | listVersions | resolve13
+        '[1.0,1.3]'             | '1.2'                       | true         | true
+        '1.2'                   | '[1.0,1.3]'                 | false        | false
+        '[1.0,1.2]'             | '[1.0, 1.3]'                | true         | false
+        '[1.0,1.3]'             | '[1.0,1.2]'                 | true         | true
     }
 
     def "should not downgrade dependency version when a transitive dependency has strict version"() {
@@ -391,9 +398,6 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
             'org:foo' {
                 expectVersionListing()
                 '16' {
-                    expectGetMetadata()
-                }
-                '18' {
                     expectGetMetadata()
                 }
             }
@@ -764,7 +768,7 @@ class RichVersionConstraintsIntegrationTest extends AbstractModuleDependencyReso
         then:
         // TODO CC: This is the generic error message for a failing dependency,
         // but we can probably do better, even though it's not specific to rejectAll
-        failure.assertHasCause("""Could not find org:foo:.""")
+        failure.assertHasCause("Could not find any version that matches org:foo.")
     }
 
     /**

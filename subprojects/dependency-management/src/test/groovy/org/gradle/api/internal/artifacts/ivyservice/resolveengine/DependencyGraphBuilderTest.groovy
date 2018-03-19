@@ -184,7 +184,7 @@ class DependencyGraphBuilderTest extends Specification {
         traverses root, c
         traverses a, d, revision: 'latest'
         doesNotResolve b, d, revision: 'latest'
-        doesNotTraverse c, d
+        doesNotResolve c, d  // Not resolved, because 'latest' resolves to 1.0, so already satisfied
 
         when:
         def result = resolve()
