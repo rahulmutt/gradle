@@ -16,6 +16,7 @@
 
 package org.gradle.language.swift.internal;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -214,7 +215,7 @@ public class DefaultSwiftBinary extends DefaultNativeBinary implements SwiftBina
         @Override
         public Set<File> getFiles() {
             if (result == null) {
-                result = Sets.newLinkedHashSet();
+                ImmutableSet.Builder<File> builder = ImmutableSet.builder();
                 Map<ComponentIdentifier, ModuleMap> moduleMaps = Maps.newLinkedHashMap();
                 for (ResolvedArtifactResult artifact : importPathConfig.getIncoming().getArtifacts()) {
                     Usage usage = artifact.getVariant().getAttributes().getAttribute(Usage.USAGE_ATTRIBUTE);
@@ -240,15 +241,16 @@ public class DefaultSwiftBinary extends DefaultNativeBinary implements SwiftBina
                         moduleMap.getPublicHeaderPaths().add(artifact.getFile().getAbsolutePath());
                     }
                     // TODO Change this to only add SWIFT_API artifacts and instead parse modulemaps to discover compile task inputs
-                    result.add(artifact.getFile());
+                    builder.add(artifact.getFile());
                 }
 
                 if (!moduleMaps.isEmpty()) {
                     NativeDependencyCache cache = getNativeDependencyCache();
                     for (ModuleMap moduleMap : moduleMaps.values()) {
-                        result.add(cache.getModuleMapFile(moduleMap));
+                        builder.add(cache.getModuleMapFile(moduleMap));
                     }
                 }
+                result = builder.build();
             }
             return result;
         }

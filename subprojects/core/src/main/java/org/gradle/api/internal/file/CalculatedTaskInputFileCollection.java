@@ -16,6 +16,7 @@
 
 package org.gradle.api.internal.file;
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.internal.file.collections.MinimalFileSet;
 import org.gradle.api.internal.tasks.LifecycleAwareTaskProperty;
 
@@ -28,7 +29,7 @@ public class CalculatedTaskInputFileCollection extends AbstractFileCollection im
     private final String taskPath;
     private MinimalFileSet calculatedFiles;
     private List<LifecycleAwareTaskProperty> targets;
-    private Set<File> cachedFiles;
+    private ImmutableSet<File> cachedFiles;
     private boolean taskIsExecuting;
 
     public CalculatedTaskInputFileCollection(String taskPath, MinimalFileSet calculatedFiles, Object[] inputs) {
@@ -56,7 +57,7 @@ public class CalculatedTaskInputFileCollection extends AbstractFileCollection im
             throw new IllegalStateException("Can only query " + calculatedFiles.getDisplayName() + " while task " + taskPath + " is running");
         }
         if (cachedFiles == null) {
-            cachedFiles = calculatedFiles.getFiles();
+            cachedFiles = ImmutableSet.copyOf(calculatedFiles.getFiles());
         }
         return cachedFiles;
     }

@@ -44,8 +44,9 @@ public class UnionFileCollection extends CompositeFileCollection {
 
     @Override
     public FileCollection add(FileCollection collection) {
-        source.add(collection);
-        return this;
+        Set<FileCollection> newSource = GUtil.addToCollection(new LinkedHashSet<FileCollection>(), source);
+        newSource.add(collection);
+        return new UnionFileCollection(newSource);
     }
 
     @Override

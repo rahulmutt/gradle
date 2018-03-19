@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gradle.api.internal.file;
+package org.gradle.api.internal.file
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
@@ -434,18 +435,18 @@ public class AbstractFileCollectionTest extends Specification {
     }
 
     private class TestFileCollection extends AbstractFileCollection {
-        Set<File> files = new LinkedHashSet<File>();
+        Set<File> files
 
         TestFileCollection(File... files) {
-            this.files.addAll(Arrays.asList(files));
+            this.files = ImmutableSet.of(files)
         }
 
-        public String getDisplayName() {
-            return "collection-display-name";
+        String getDisplayName() {
+            return "collection-display-name"
         }
 
-        public Set<File> getFiles() {
-            return files;
+        Set<File> getFiles() {
+            return files
         }
     }
 

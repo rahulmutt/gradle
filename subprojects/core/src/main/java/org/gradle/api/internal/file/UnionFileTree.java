@@ -58,7 +58,8 @@ public class UnionFileTree extends CompositeFileTree {
             throw new UnsupportedOperationException(String.format("Can only add FileTree instances to %s.", getDisplayName()));
         }
 
-        sourceTrees.add(Cast.cast(FileTreeInternal.class, source));
-        return this;
+        Set<FileTreeInternal> newSourceTrees = Sets.newLinkedHashSet(sourceTrees);
+        newSourceTrees.add(Cast.cast(FileTreeInternal.class, source));
+        return new UnionFileTree(displayName, newSourceTrees);
     }
 }

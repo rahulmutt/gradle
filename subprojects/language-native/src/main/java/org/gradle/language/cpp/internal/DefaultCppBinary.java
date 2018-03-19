@@ -16,6 +16,7 @@
 
 package org.gradle.language.cpp.internal;
 
+import com.google.common.collect.ImmutableSet;
 import org.gradle.api.Buildable;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -203,7 +204,7 @@ public class DefaultCppBinary extends DefaultNativeBinary implements CppBinary {
                 // Collect the files from anything other than an external component and use these directly in the result
                 // For external components, unzip the headers into a cache, if not already present.
                 ArtifactCollection artifacts = includePathConfig.getIncoming().getArtifacts();
-                Set<File> files = new LinkedHashSet<File>();
+                ImmutableSet.Builder<File> files = ImmutableSet.builder();
                 if (!artifacts.getArtifacts().isEmpty()) {
                     NativeDependencyCache cache = getNativeDependencyCache();
                     for (ResolvedArtifactResult artifact : artifacts) {
@@ -217,7 +218,7 @@ public class DefaultCppBinary extends DefaultNativeBinary implements CppBinary {
                         }
                     }
                 }
-                result = files;
+                result = files.build();
             }
             return result;
         }
