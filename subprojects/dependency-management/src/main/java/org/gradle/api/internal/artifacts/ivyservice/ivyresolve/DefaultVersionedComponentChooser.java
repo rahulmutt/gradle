@@ -84,7 +84,7 @@ class DefaultVersionedComponentChooser implements VersionedComponentChooser {
 
             if (rejectedVersionSelector != null && rejectedVersionSelector.accept(version)) {
                 // Mark this version as rejected and continue
-                result.rejected(version);
+                result.rejectedByConstraint(version);
                 continue;
             } else {
                 ModuleComponentIdentifier candidateIdentifier = candidate.getId();
@@ -95,7 +95,7 @@ class DefaultVersionedComponentChooser implements VersionedComponentChooser {
             }
 
             // Mark this version as rejected
-            result.rejected(version);
+            result.rejectedByRule(version);
             if (requestedVersionMatcher.matchesUniqueVersion()) {
                 // Only consider one candidate, because matchesUniqueVersion means that there's no ambiguity on the version number
                 break;

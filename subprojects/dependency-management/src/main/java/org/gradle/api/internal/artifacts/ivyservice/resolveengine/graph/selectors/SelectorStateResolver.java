@@ -117,6 +117,9 @@ public class SelectorStateResolver {
             if (candidate.getFailure() != null) {
                 return false;
             }
+            if (dep.getVersionConstraint() == null || dep.getVersionConstraint().getPreferredSelector() == null) {
+                return false;
+            }
             VersionSelector prefer = dep.getVersionConstraint().getPreferredSelector();
             return !prefer.requiresMetadata() && prefer.accept(candidate.getModuleVersionId().getVersion());
         }

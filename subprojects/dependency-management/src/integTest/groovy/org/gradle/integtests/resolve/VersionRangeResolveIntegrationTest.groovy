@@ -360,20 +360,21 @@ class VersionRangeResolveIntegrationTest extends AbstractDependencyResolutionTes
         where:
         one      | two      | three    | rst | strict1Result | strict2Result | strict3Result
         FIXED_12 | FIXED_13 | FIXED_10 | 13  | -1            | 13            | -1
-//        FIXED_10    | FIXED_12    | RANGE_10_14 | 12     | -1            | 12            | 12
-//        FIXED_10    | RANGE_10_11 | RANGE_10_14 | 10     | 10            | 10            | 10
+        FIXED_10    | FIXED_12    | RANGE_10_14 | 12     | -1            | 12            | 12
+        FIXED_10    | RANGE_10_11 | RANGE_10_14 | 10     | 10            | 10            | 10
 
-//        FIXED_10    | RANGE_11_12 | RANGE_10_14 | 12     | -1            | 12            | 12
+        FIXED_10    | RANGE_11_12 | RANGE_10_14 | 12     | -1            | 12            | 12
         FIXED_10    | RANGE_10_11 | RANGE_13_14 | 13     | -1            | -1            | 13
-//        RANGE_10_11 | RANGE_10_12 | RANGE_10_14 | 11     | 11            | 11            | 11
+        RANGE_10_11 | RANGE_10_12 | RANGE_10_14 | 11     | 11            | 11            | 11
         RANGE_10_11 | RANGE_10_12 | RANGE_13_14 | 13     | -1            | -1            | 13
         RANGE_10_11 | RANGE_10_12 | RANGE_13_14 | 13     | -1            | -1            | 13
 
 //         gradle/gradle#4608
 //        FIXED_10    | FIXED_10    | FIXED_12    | 12     | -1            | -1            | 12
+        // TODO:DAZ This should pass, but the test is defining all constraints in the same project
 
-//        FIXED_12    | RANGE_12_14 | RANGE_10_11 | 12     | 12            | 12            | -1
-//        FIXED_12    | RANGE_12_14 | FIXED_10    | 12     | 12            | 12            | -1
+        FIXED_12    | RANGE_12_14 | RANGE_10_11 | 12     | 12            | 12            | -1
+        FIXED_12    | RANGE_12_14 | FIXED_10    | 12     | 12            | 12            | -1
     }
 
     @Unroll
@@ -386,9 +387,9 @@ class VersionRangeResolveIntegrationTest extends AbstractDependencyResolutionTes
         where:
         one     | two      | three    | four     | resolved
         FIXED_9 | FIXED_10 | FIXED_11 | FIXED_12 | 12
-//        FIXED_10 | RANGE_10_11 | FIXED_12 | RANGE_12_14 | 12
+        FIXED_10 | RANGE_10_11 | FIXED_12 | RANGE_12_14 | 12
         FIXED_10 | RANGE_10_11 | RANGE_10_12 | RANGE_13_14 | 13
-//        FIXED_9  | RANGE_10_11 | RANGE_10_12 | RANGE_10_14 | 11
+        FIXED_9  | RANGE_10_11 | RANGE_10_12 | RANGE_10_14 | 11
     }
 
     @Unroll
@@ -421,8 +422,8 @@ class VersionRangeResolveIntegrationTest extends AbstractDependencyResolutionTes
         where:
         deps                                              | reject11 | reject12 | reject13
         [FIXED_10, FIXED_11, FIXED_12]                    | 12       | -1       | 12
-//        [RANGE_10_14, RANGE_10_12, FIXED_12]              | 12       | 13       | 12
-//        [FIXED_10, RANGE_10_11, FIXED_12, RANGE_12_14]    | 12       | 13       | 12
+//        [RANGE_10_14, RANGE_10_12, FIXED_12]              | 12       | 13       | 12  // TODO:DAZ Merging is not quite right
+        [FIXED_10, RANGE_10_11, FIXED_12, RANGE_12_14]    | 12       | 13       | 12
         [FIXED_10, RANGE_10_11, RANGE_10_12, RANGE_13_14] | 13       | 13       | -1
 //        [FIXED_9, RANGE_10_11, RANGE_10_12, RANGE_10_14]  | 10       | 11       | 11
     }
@@ -443,6 +444,12 @@ class VersionRangeResolveIntegrationTest extends AbstractDependencyResolutionTes
         def vs = new RejectVersion()
         vs.version = version
         vs
+    }
+
+    private static RenderableVersion rejectRange(int low, int high) {
+        def vs = new RejectVersion()
+        vs.version = "[${low},${high}]"
+        return vs
     }
 
     private static RenderableVersion strict(RenderableVersion input) {

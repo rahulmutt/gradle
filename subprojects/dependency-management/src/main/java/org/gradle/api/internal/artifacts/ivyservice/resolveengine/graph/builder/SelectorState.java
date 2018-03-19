@@ -33,6 +33,7 @@ import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.Compone
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionReasonInternal;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.VersionSelectionReasons;
 import org.gradle.internal.component.model.DependencyMetadata;
+import org.gradle.internal.resolve.ModuleVersionRejectedException;
 import org.gradle.internal.resolve.ModuleVersionResolveException;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
@@ -199,7 +200,17 @@ public class SelectorState implements DependencyGraphSelector, ResolvableSelecto
         // Target module can change, if this is called as the result of a module replacement conflict.
         // TODO:DAZ We are not updating the set of selectors for the updated module (or for the module that the selectors were removed from)
         this.targetModule = selectedComponent.getModule();
+
+        // Overwrite a failure if it was for a rejected version
+        if (wasRejected()) {
+            this.failure = null;
+        }
     }
+
+    private boolean wasRejected() {
+        return failure instanceof ModuleVersionRejectedException;
+    }
+
 
     public DependencyMetadata getDependencyMetadata() {
         return dependencyMetadata;

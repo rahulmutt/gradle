@@ -137,7 +137,7 @@ class DefaultVersionedComponentChooserTest extends Specification {
         _ * d.id >> DefaultModuleComponentIdentifier.newId("group", "name", "1.1")
         _ * componentSelectionRules.rules >> []
         1 * selectedComponentResult.notMatched('2.0')
-        1 * selectedComponentResult.rejected('1.3')
+        1 * selectedComponentResult.rejectedByConstraint('1.3')
         0 * selectedComponentResult.notMatched('1.1') // versions are checked latest first
         1 * selectedComponentResult.matches(selected)
         0 * _
@@ -196,7 +196,7 @@ class DefaultVersionedComponentChooserTest extends Specification {
         1 * a.resolve() >> resolvedWithStatus("milestone")
         _ * componentSelectionRules.rules >> []
         1 * selectedComponentResult.notMatched('2.0')
-        1 * selectedComponentResult.rejected('1.3')
+        1 * selectedComponentResult.rejectedByConstraint('1.3')
         1 * selectedComponentResult.matches(selected)
         0 * _
 
@@ -227,7 +227,7 @@ class DefaultVersionedComponentChooserTest extends Specification {
             }
         })
         1 * selectedComponentResult.notMatched('2.0')
-        1 * selectedComponentResult.rejected('1.4') // 1.2 won't be rejected because of latest first sorting
+        1 * selectedComponentResult.rejectedByRule('1.4') // 1.2 won't be rejected because of latest first sorting
         1 * selectedComponentResult.matches(selected)
         0 * _
     }
@@ -258,7 +258,7 @@ class DefaultVersionedComponentChooserTest extends Specification {
             }
         })
         1 * selectedComponentResult.notMatched('2.0')
-        1 * selectedComponentResult.rejected('1.3')
+        1 * selectedComponentResult.rejectedByRule('1.3')
         1 * selectedComponentResult.noMatchFound()
         0 * _
 
@@ -336,9 +336,9 @@ class DefaultVersionedComponentChooserTest extends Specification {
         _ * componentSelectionRules.rules >> rules({ ComponentSelection selection ->
             selection.reject("Rejecting everything")
         })
-        1 * selectedComponentResult.rejected('2.0')
-        1 * selectedComponentResult.rejected('1.3')
-        1 * selectedComponentResult.rejected('1.2')
+        1 * selectedComponentResult.rejectedByRule('2.0')
+        1 * selectedComponentResult.rejectedByRule('1.3')
+        1 * selectedComponentResult.rejectedByRule('1.2')
         1 * selectedComponentResult.noMatchFound()
         0 * _
     }

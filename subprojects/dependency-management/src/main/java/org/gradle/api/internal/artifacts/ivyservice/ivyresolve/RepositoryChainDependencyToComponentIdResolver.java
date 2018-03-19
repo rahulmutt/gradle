@@ -32,7 +32,7 @@ import org.gradle.internal.component.external.model.ModuleComponentResolveMetada
 import org.gradle.internal.component.external.model.ModuleDependencyMetadata;
 import org.gradle.internal.component.external.model.ModuleDependencyMetadataWrapper;
 import org.gradle.internal.component.model.DependencyMetadata;
-import org.gradle.internal.resolve.ModuleVersionNotFoundException;
+import org.gradle.internal.resolve.ModuleVersionRejectedException;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 
@@ -68,7 +68,7 @@ public class RepositoryChainDependencyToComponentIdResolver implements Dependenc
             } else {
                 String version = resolvedVersionConstraint.getPreferredVersion();
                 if (resolvedVersionConstraint.getRejectedSelector() != null && resolvedVersionConstraint.getRejectedSelector().accept(version)) {
-                    result.failed(new ModuleVersionNotFoundException(module, result.getAttempted(), Collections.<String>emptyList(), Collections.singletonList(version)));
+                    result.failed(new ModuleVersionRejectedException(module, result.getAttempted(), Collections.<String>emptyList(), Collections.singletonList(version)));
                 } else {
                     ModuleComponentIdentifier id = new DefaultModuleComponentIdentifier(module.getGroup(), module.getModule(), version);
                     ModuleVersionIdentifier mvId = moduleIdentifierFactory.moduleWithVersion(module.getGroup(), module.getModule(), version);

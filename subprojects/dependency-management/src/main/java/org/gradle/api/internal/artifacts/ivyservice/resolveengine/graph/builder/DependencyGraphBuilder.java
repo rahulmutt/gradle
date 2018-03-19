@@ -24,8 +24,10 @@ import org.gradle.api.Action;
 import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.internal.artifacts.ComponentSelectorConverter;
+import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier;
 import org.gradle.api.internal.artifacts.ResolveContext;
 import org.gradle.api.internal.artifacts.ResolvedVersionConstraint;
 import org.gradle.api.internal.artifacts.dsl.ModuleReplacementsData;
@@ -49,6 +51,7 @@ import org.gradle.internal.id.LongIdGenerator;
 import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.operations.BuildOperationQueue;
 import org.gradle.internal.operations.RunnableBuildOperation;
+import org.gradle.internal.resolve.ModuleVersionRejectedException;
 import org.gradle.internal.resolve.resolver.ComponentMetaDataResolver;
 import org.gradle.internal.resolve.resolver.DependencyToComponentIdResolver;
 import org.gradle.internal.resolve.resolver.ResolveContextToComponentResolver;
@@ -223,12 +226,21 @@ public class DependencyGraphBuilder {
         List<SelectorState> selectors = module.getSelectors();
         SelectorStateResolver.ResolveResults resolve = SelectorStateResolver.resolve(selectors);
         ComponentIdResolveResult idResolveResult = resolve.results.get(selector);
+
+        ComponentState moduleRevision;
         if (idResolveResult.getFailure() != null) {
-            // Resolve failure, nothing more to do.
-            return;
+            String rejectedVersion = getRejectedVersion(idResolveResult);
+            if (rejectedVersion == null) {
+                // Resolve failure, nothing more to do.
+                return;
+            }
+            ModuleVersionIdentifier moduleVersionIdentifier = DefaultModuleVersionIdentifier.newId(module.getId().getGroup(), module.getId().getName(), rejectedVersion);
+            ModuleComponentIdentifier componentIdentifier = DefaultModuleComponentIdentifier.newId(moduleVersionIdentifier);
+            moduleRevision = resolveState.getRevision(componentIdentifier, moduleVersionIdentifier, null);
+        } else {
+            moduleRevision = resolveState.getRevision(idResolveResult.getId(), idResolveResult.getModuleVersionId(), idResolveResult.getMetadata());
         }
 
-        ComponentState moduleRevision = resolveState.getRevision(idResolveResult.getId(), idResolveResult.getModuleVersionId(), idResolveResult.getMetadata());
         dependency.start(moduleRevision);
         selector.select(moduleRevision, idResolveResult);
 
@@ -255,6 +267,13 @@ public class DependencyGraphBuilder {
                 c.withParticipatingModules(resolveState.getDeselectVersionAction());
             }
         }
+    }
+
+    private static String getRejectedVersion(ComponentIdResolveResult resolveResult) {
+        if (resolveResult.getFailure() instanceof ModuleVersionRejectedException) {
+            return ((ModuleVersionRejectedException) resolveResult.getFailure()).getRejectedVersion();
+        }
+        return null;
     }
 
     private static boolean tryCompatibleSelection(final ResolveState resolveState,

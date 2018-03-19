@@ -44,7 +44,12 @@ public interface ComponentSelectionContext {
     void notMatched(String candidateVersion);
 
     /**
-     * Adds a candidate version that matched the provided selector, but was rejected by some rule.
+     * Adds a candidate version that matched the provided selector, but was rejected by a constraint.
      */
-    void rejected(String version);
+    void rejectedByConstraint(String version);
+
+    /**
+     * Adds a candidate version that matched the provided selector, but was rejected by a component selection rule.
+     */
+    void rejectedByRule(String version);
 }

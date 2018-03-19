@@ -33,6 +33,7 @@ import org.gradle.internal.component.external.model.ModuleDependencyMetadata;
 import org.gradle.internal.component.model.DefaultComponentOverrideMetadata;
 import org.gradle.internal.component.model.DependencyMetadata;
 import org.gradle.internal.resolve.ModuleVersionNotFoundException;
+import org.gradle.internal.resolve.ModuleVersionRejectedException;
 import org.gradle.internal.resolve.ModuleVersionResolveException;
 import org.gradle.internal.resolve.result.BuildableComponentIdResolveResult;
 import org.gradle.internal.resolve.result.BuildableModuleComponentMetaDataResolveResult;
@@ -108,11 +109,16 @@ public class DynamicVersionResolver {
 
     private void notFound(BuildableComponentIdResolveResult result, ModuleComponentSelector requested, List<RepositoryResolveState> resolveStates) {
         Set<String> unmatchedVersions = new LinkedHashSet<String>();
-        Set<String> rejectedVersions = new LinkedHashSet<String>();
+        Set<String> ruleRejections = new LinkedHashSet<String>();
+        Set<String> constraintRejections = new LinkedHashSet<String>();
         for (RepositoryResolveState resolveState : resolveStates) {
-            resolveState.applyTo(result, unmatchedVersions, rejectedVersions);
+            resolveState.applyTo(result, unmatchedVersions, ruleRejections, constraintRejections);
         }
-        result.failed(new ModuleVersionNotFoundException(requested, result.getAttempted(), unmatchedVersions, rejectedVersions));
+        if (ruleRejections.isEmpty() && !constraintRejections.isEmpty()) {
+            result.failed(new ModuleVersionRejectedException(requested, result.getAttempted(), unmatchedVersions, constraintRejections));
+        } else {
+            result.failed(new ModuleVersionNotFoundException(requested, result.getAttempted(), unmatchedVersions, ruleRejections));
+        }
     }
 
     private RepositoryChainModuleResolution findLatestModule(List<RepositoryResolveState> resolveStates, Collection<Throwable> failures) {
@@ -211,7 +217,8 @@ public class DynamicVersionResolver {
         private final BuildableModuleComponentMetaDataResolveResult resolvedVersionMetadata = new DefaultBuildableModuleComponentMetaDataResolveResult();
         private final Map<String, CandidateResult> candidateComponents = new LinkedHashMap<String, CandidateResult>();
         private final Set<String> unmatchedVersions = Sets.newLinkedHashSet();
-        private final Set<String> rejectedVersions = Sets.newLinkedHashSet();
+        private final Set<String> ruleRejections = Sets.newLinkedHashSet();
+        private final Set<String> constraintRejections = Sets.newLinkedHashSet();
         private final VersionListResult versionListingResult;
         private final ModuleComponentRepository repository;
         private final AttemptCollector attemptCollector;
@@ -277,8 +284,13 @@ public class DynamicVersionResolver {
         }
 
         @Override
-        public void rejected(String version) {
-            rejectedVersions.add(version);
+        public void rejectedByConstraint(String version) {
+            constraintRejections.add(version);
+        }
+
+        @Override
+        public void rejectedByRule(String version) {
+            ruleRejections.add(version);
         }
 
         private List<CandidateResult> candidates() {
@@ -294,11 +306,12 @@ public class DynamicVersionResolver {
             return candidates;
         }
 
-        protected void applyTo(ResourceAwareResolveResult target, Set<String> unmatchedVersions, Set<String> rejectedVersions) {
+        protected void applyTo(ResourceAwareResolveResult target, Set<String> unmatchedVersions, Set<String> ruleRejections, Set<String> constraintRejections) {
             versionListingResult.applyTo(target);
             attemptCollector.applyTo(target);
             unmatchedVersions.addAll(this.unmatchedVersions);
-            rejectedVersions.addAll(this.rejectedVersions);
+            ruleRejections.addAll(this.ruleRejections);
+            constraintRejections.addAll(this.constraintRejections);
         }
     }
 
