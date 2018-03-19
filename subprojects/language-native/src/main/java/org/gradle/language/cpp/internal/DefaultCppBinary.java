@@ -45,7 +45,6 @@ import org.gradle.nativeplatform.toolchain.internal.PlatformToolProvider;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class DefaultCppBinary extends DefaultNativeBinary implements CppBinary {
