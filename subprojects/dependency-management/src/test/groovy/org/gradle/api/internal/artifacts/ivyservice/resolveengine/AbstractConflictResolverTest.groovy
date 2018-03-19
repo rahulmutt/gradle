@@ -18,6 +18,7 @@ package org.gradle.api.internal.artifacts.ivyservice.resolveengine
 
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.MutableVersionConstraint
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionDescriptorInternal
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.ResolvedVersionConstraint
@@ -126,6 +127,11 @@ abstract class AbstractConflictResolverTest extends Specification {
         @Override
         ResolvedVersionConstraint getVersionConstraint() {
             new DefaultResolvedVersionConstraint(constraint, new DefaultVersionSelectorScheme(new DefaultVersionComparator()))
+        }
+
+        @Override
+        VersionSelector getRejectSelector() {
+            versionConstraint.rejectedSelector
         }
 
         @Override

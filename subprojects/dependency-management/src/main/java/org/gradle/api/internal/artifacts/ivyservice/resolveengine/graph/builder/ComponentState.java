@@ -24,6 +24,8 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.internal.artifacts.ResolvedVersionConstraint;
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.UnionVersionSelector;
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.ComponentResolutionState;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphComponent;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.result.ComponentSelectionDescriptorInternal;
@@ -177,6 +179,25 @@ public class ComponentState implements ComponentResolutionState, DependencyGraph
 
     public ResolvedVersionConstraint getVersionConstraint() {
         return firstSelectedBy == null ? null : firstSelectedBy.getVersionConstraint();
+    }
+
+    public VersionSelector getRejectSelector() {
+        if (selectedBy == null) {
+            return null;
+        }
+        List<VersionSelector> rejectSelectors = Lists.newArrayListWithCapacity(selectedBy.size());
+        for (SelectorState selectorState : selectedBy) {
+            if (selectorState.getVersionConstraint() != null && selectorState.getVersionConstraint().getRejectedSelector() != null) {
+                rejectSelectors.add(selectorState.getVersionConstraint().getRejectedSelector());
+            }
+        }
+        if (rejectSelectors.isEmpty()) {
+            return null;
+        }
+        if (rejectSelectors.size() == 1) {
+            return rejectSelectors.get(0);
+        }
+        return new UnionVersionSelector(rejectSelectors);
     }
 
     @Override

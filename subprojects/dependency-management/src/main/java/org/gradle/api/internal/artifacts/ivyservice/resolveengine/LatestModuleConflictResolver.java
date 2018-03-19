@@ -62,9 +62,9 @@ class LatestModuleConflictResolver implements ModuleConflictResolver {
             if (baseVersion == null || versionComparator.compare(version.getBaseVersion(), baseVersion) > 0) {
                 boolean accept = true;
                 for (T t : candidates) {
-                    ResolvedVersionConstraint candidateConstraints = t.getVersionConstraint();
-                    if (t != candidate && candidateConstraints != null) { // may be null for local components
-                        VersionSelector rejectedVersionSelector = candidateConstraints.getRejectedSelector();
+                    if (t != candidate) {
+                        // may be null for local components
+                        VersionSelector rejectedVersionSelector  = t.getRejectSelector();
                         if (rejectedVersionSelector != null && rejectedVersionSelector.accept(version)) {
                             accept = false;
                             break;
