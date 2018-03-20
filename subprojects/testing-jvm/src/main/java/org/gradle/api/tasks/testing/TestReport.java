@@ -21,7 +21,6 @@ import org.gradle.api.Incubating;
 import org.gradle.api.Transformer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.file.UnionFileCollection;
 import org.gradle.api.internal.file.collections.DefaultConfigurableFileCollection;
 import org.gradle.api.internal.tasks.testing.report.DefaultTestReport;
 import org.gradle.api.internal.tasks.testing.junit.result.AggregateTestResultsProvider;
@@ -57,7 +56,9 @@ public class TestReport extends DefaultTask {
     }
 
     @Inject
-    protected PathToFileResolver getFileResolver() { throw new UnsupportedOperationException(); }
+    protected PathToFileResolver getFileResolver() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns the directory to write the HTML report to.
