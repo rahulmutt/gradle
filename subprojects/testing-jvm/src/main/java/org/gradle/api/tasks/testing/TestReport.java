@@ -19,8 +19,10 @@ package org.gradle.api.tasks.testing;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
 import org.gradle.api.Transformer;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.file.UnionFileCollection;
+import org.gradle.api.internal.file.collections.DefaultConfigurableFileCollection;
 import org.gradle.api.internal.tasks.testing.report.DefaultTestReport;
 import org.gradle.api.internal.tasks.testing.junit.result.AggregateTestResultsProvider;
 import org.gradle.api.internal.tasks.testing.junit.result.BinaryResultBackedTestResultsProvider;
@@ -29,6 +31,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.internal.file.PathToFileResolver;
 import org.gradle.internal.operations.BuildOperationExecutor;
 
 import javax.inject.Inject;
@@ -53,6 +56,9 @@ public class TestReport extends DefaultTask {
         throw new UnsupportedOperationException();
     }
 
+    @Inject
+    protected PathToFileResolver getFileResolver() { throw new UnsupportedOperationException(); }
+
     /**
      * Returns the directory to write the HTML report to.
      */
@@ -73,24 +79,24 @@ public class TestReport extends DefaultTask {
      */
     @InputFiles @SkipWhenEmpty
     public FileCollection getTestResultDirs() {
-        UnionFileCollection dirs = new UnionFileCollection();
+        ConfigurableFileCollection dirs = new DefaultConfigurableFileCollection(getFileResolver(), null);
         for (Object result : results) {
             addTo(result, dirs);
         }
         return dirs;
     }
 
-    private void addTo(Object result, UnionFileCollection dirs) {
+    private void addTo(Object result, ConfigurableFileCollection dirs) {
         if (result instanceof Test) {
             Test test = (Test) result;
-            dirs.add(getProject().files(test.getBinResultsDir()).builtBy(test));
+            dirs.from(getProject().files(test.getBinResultsDir()).builtBy(test));
         } else if (result instanceof Iterable<?>) {
             Iterable<?> iterable = (Iterable<?>) result;
             for (Object nested : iterable) {
                 addTo(nested, dirs);
             }
         } else {
-            dirs.add(getProject().files(result));
+            dirs.from(getProject().files(result));
         }
     }
 
