@@ -33,7 +33,13 @@ public class ListBackedFileSet implements MinimalFileSet, Serializable {
     }
 
     public ListBackedFileSet(Collection<File> files) {
-        this.files = ImmutableSet.copyOf(files);
+        ImmutableSet.Builder<File> builder = ImmutableSet.builder();
+        for (File file : files) {
+            if (file != null) {
+                builder.add(file);
+            }
+        }
+        this.files = builder.build();
     }
 
     public String getDisplayName() {
