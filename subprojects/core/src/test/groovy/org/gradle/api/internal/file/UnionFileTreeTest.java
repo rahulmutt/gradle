@@ -42,8 +42,8 @@ public class UnionFileTreeTest {
     public void canAddFileTree() {
         FileTreeInternal set1 = context.mock(FileTreeInternal.class, "set1");
 
-        set.add(set1);
-        assertThat(set.getSourceCollections(), equalTo((Iterable) toList((Object) set1)));
+        UnionFileTree result = set.add(set1);
+        assertThat(result.getSourceCollections(), equalTo((Iterable) toList((Object) set1)));
     }
 
     @Test
