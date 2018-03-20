@@ -55,6 +55,11 @@ public class TestReport extends DefaultTask {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Getter for injected PathToFileResolver
+     * @since 4.7
+     * @return the injected PathToFileResolver
+     */
     @Inject
     protected PathToFileResolver getFileResolver() {
         throw new UnsupportedOperationException();
