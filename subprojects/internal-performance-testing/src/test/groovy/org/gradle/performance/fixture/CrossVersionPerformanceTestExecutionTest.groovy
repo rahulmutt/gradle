@@ -56,8 +56,10 @@ class CrossVersionPerformanceTestExecutionTest extends ResultSpecification {
         result.assertCurrentVersionHasNotRegressed()
     }
 
-    def "fails when average execution time for current release is larger than median execution time for previous releases"() {
+    def "fails when median execution time for current release is larger than median execution time for previous releases"() {
         given:
+        result.baseline("1.0").results << operation(totalTime: 100)
+        result.baseline("1.0").results << operation(totalTime: 100)
         result.baseline("1.0").results << operation(totalTime: 100)
         result.baseline("1.0").results << operation(totalTime: 100)
         result.baseline("1.0").results << operation(totalTime: 100)
@@ -65,10 +67,14 @@ class CrossVersionPerformanceTestExecutionTest extends ResultSpecification {
         result.baseline("1.3").results << operation(totalTime: 110)
         result.baseline("1.3").results << operation(totalTime: 110)
         result.baseline("1.3").results << operation(totalTime: 111)
+        result.baseline("1.3").results << operation(totalTime: 111)
+        result.baseline("1.3").results << operation(totalTime: 111)
 
         and:
         result.current << operation(totalTime: 110)
         result.current << operation(totalTime: 110)
+        result.current << operation(totalTime: 111)
+        result.current << operation(totalTime: 111)
         result.current << operation(totalTime: 111)
 
         when:
@@ -76,8 +82,8 @@ class CrossVersionPerformanceTestExecutionTest extends ResultSpecification {
 
         then:
         AssertionError e = thrown()
-        e.message.startsWith("Speed ${result.displayName}: we're slower than 1.0 with 95% confidence.")
-        e.message.contains('Difference: 10.333 ms slower (10.333 ms), 10.33%')
+        e.message.startsWith("Speed ${result.displayName}: we're slower than 1.0 with 99% confidence.")
+        e.message.contains('Difference: 10.6 ms slower (10.6 ms), 10.60%')
         !e.message.contains('1.3')
     }
 
