@@ -129,9 +129,8 @@ class SelectorStateResolverTest extends Specification {
 
         then:
         selected.version == "10"
-        missingLow.selectedVersion == null
         missingLow.resolved.failure instanceof ModuleVersionNotFoundException
-        missingHigh.selectedVersion == null
+        missingLow.resolved.failure instanceof ModuleVersionNotFoundException
         missingHigh.resolved.failure instanceof ModuleVersionNotFoundException
     }
 
