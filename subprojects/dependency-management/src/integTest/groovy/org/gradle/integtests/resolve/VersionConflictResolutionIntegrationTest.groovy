@@ -788,9 +788,40 @@ task checkDeps(dependsOn: configurations.compile) {
                     configurations.conf.files
                 }
             }
+            task checkGraph {
+                doLast {
+                    def result = configurations.conf.incoming.resolutionResult
+                    assert result.allComponents*.toString() as Set == ['project :', 'org:a:1.0', 'org:leaf:1.5', 'org:b:1.0', 'org:c:1.0'] as Set
+                    def a = result.allComponents.find { it.id instanceof ModuleComponentIdentifier && it.id.module == 'a' }
+                    def b = result.allComponents.find { it.id instanceof ModuleComponentIdentifier && it.id.module == 'b' }
+                    def c = result.allComponents.find { it.id instanceof ModuleComponentIdentifier && it.id.module == 'c' }
+                    def leaf = result.allComponents.find { it.id instanceof ModuleComponentIdentifier && it.id.module == 'leaf' }
+
+                    a.dependencies.each {
+                        assert it instanceof ResolvedDependencyResult
+                        assert it.requested.toString() == 'org:leaf:1.0'
+                        assert it.selected == leaf
+                    }
+                    b.dependencies.each {
+                        assert it instanceof ResolvedDependencyResult
+                        assert it.requested.toString() == 'org:leaf:[1.5,1.9]'
+                        assert it.selected == leaf
+                    }
+                    c.dependencies.each {
+                        assert it instanceof UnresolvedDependencyResult
+                        assert it.requested.toString() == 'org:leaf:2.0+'
+                        assert it.failure.getMessage() == '''Could not find any version that matches org:leaf:2.0+.
+Versions that do not match:
+    1.5'''
+                    }
+                }
+            }
         """
 
         when:
+        succeeds "checkGraph"
+
+        and:
         runAndFail "resolve"
 
         then:
